@@ -1,0 +1,73 @@
+﻿# Operating system
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local notes
+docs/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Java / Spring Boot
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+.mvn/wrapper/maven-wrapper.jar
+
+# Maven
+dependency-reduced-pom.xml
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Node / React / Vite
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+
+# Package manager caches
+.npm/
+.pnpm-store/
+.yarn/
+!.yarn/releases/
+!.yarn/plugins/
+!.yarn/sdks/
+!.yarn/versions/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Test and tooling caches
+.pytest_cache/
+.cache/
+.parcel-cache/
+.turbo/
+
+# Local database and generated files
+*.db
+*.sqlite
+*.sqlite3
+uploads/
+tmp/
+temp/
