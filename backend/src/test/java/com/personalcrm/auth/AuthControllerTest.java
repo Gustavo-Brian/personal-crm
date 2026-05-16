@@ -1,5 +1,6 @@
 package com.personalcrm.auth;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -46,5 +47,56 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.name").value("Katherine Johnson"))
                 .andExpect(jsonPath("$.email").value("katherine@example.com"));
+    }
+
+    @Test
+    void rejectsDuplicateEmailRegistration() throws Exception {
+        String firstRequest = """
+                {
+                  "name": "First User",
+                  "email": "duplicate@example.com",
+                  "password": "password123"
+                }
+                """;
+        String duplicateRequest = """
+                {
+                  "name": "Second User",
+                  "email": "DUPLICATE@example.com",
+                  "password": "password456"
+                }
+                """;
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(firstRequest))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(duplicateRequest))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Email already registered: duplicate@example.com"));
+
+        assertThat(userRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void rejectsInvalidRegistrationPayload() throws Exception {
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": " ",
+                                  "email": "invalid-email",
+                                  "password": "short"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.errors.name").exists())
+                .andExpect(jsonPath("$.errors.email").exists())
+                .andExpect(jsonPath("$.errors.password").exists());
+
+        assertThat(userRepository.count()).isZero();
     }
 }

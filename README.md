@@ -74,6 +74,10 @@ Example response:
 
 Validation and duplicate email errors are returned as JSON responses.
 
+## Testing
+
+The backend test suite covers the registration flow, password hashing, duplicate email protection, request validation errors, repository persistence, and Flyway migration startup with H2.
+
 ## Local Setup
 
 Requirements:
