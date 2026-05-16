@@ -1,39 +1,100 @@
 # Personal CRM
 
-A full-stack personal CRM for managing contacts, relationships, groups, appointments, important dates, and relationship reminders.
+A backend API for a personal CRM focused on authenticated user accounts and relationship management data.
 
 ## Overview
 
-Personal CRM is a portfolio project focused on organizing personal and professional relationships in one place. The goal is to build a complete web application with authentication, contact management, relationship context, scheduling, and a clean full-stack architecture.
+Personal CRM organizes personal and professional relationship data in an authenticated application. The backend provides the account foundation for user-owned CRM data, including persistence, database migrations, request validation, password hashing, and structured API error responses.
 
-## Features
+## Capabilities
 
-- Contact management
-- Relationship notes
-- Contact groups
-- Appointments and reminders
-- Important dates
-- Authentication
-- Dashboard overview
+- User account registration
+- Email normalization and duplicate email protection
+- BCrypt password hashing
+- User persistence with Spring Data JPA
+- Flyway-managed database schema
+- Validation errors and conflict responses in JSON
+- Test configuration with an in-memory H2 database
 
 ## Architecture
 
-The project is planned as a full-stack application with a Spring Boot REST API, a React frontend, database migrations, and authenticated user-specific data.
+The application is organized with a Spring Boot backend and a frontend workspace. The backend follows a layered structure with controllers, services, repositories, configuration classes, database migrations, and shared exception handling.
 
-## Planned Stack
+## Backend
+
+- Java 21
+- Spring Boot
+- Spring Web
+- Spring Data JPA
+- Spring Security Crypto
+- Bean Validation
+- Flyway
+- MySQL
+- H2 for tests
+- Maven
+
+## Data Model
+
+The database schema is managed with Flyway. The user model stores account identity and authentication data:
+
+- `id`
+- `name`
+- `email`
+- `password_hash`
+- `created_at`
+- `updated_at`
+
+## API
+
+Base path: `/api`
+
+Authentication:
+
+- `POST /auth/register` creates a user account and returns the registered user id, name, and email.
+
+Example request:
+
+```json
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "password": "password123"
+}
+```
+
+Example response:
+
+```json
+{
+  "id": 1,
+  "name": "Ada Lovelace",
+  "email": "ada@example.com"
+}
+```
+
+Validation and duplicate email errors are returned as JSON responses.
+
+## Local Setup
+
+Requirements:
+
+- Java 21
+- Maven
+- MySQL 8
 
 Backend:
 
-- Java
-- Spring Boot
-- Spring Security
-- Spring Data JPA
-- Flyway
-- MySQL
+```bash
+cd backend
+mvn test
+mvn spring-boot:run
+```
 
-Frontend:
+Default backend configuration:
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
+- API URL: `http://localhost:8080/api`
+- Database URL: `jdbc:mysql://localhost:3306/personal_crm`
+- Database user: `personal_crm`
+- Database password: `personal_crm`
+
+The database settings can be changed with `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`.
