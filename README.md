@@ -10,6 +10,7 @@ Personal CRM organizes personal and professional relationship data in an authent
 
 - User account registration
 - User login with credential validation
+- JWT token generation and validation service
 - Email normalization and duplicate email protection
 - BCrypt password hashing
 - User persistence with Spring Data JPA
@@ -28,6 +29,7 @@ The application is organized with a Spring Boot backend and a frontend workspace
 - Spring Web
 - Spring Data JPA
 - Spring Security
+- Spring Security OAuth2 JOSE
 - Bean Validation
 - Flyway
 - MySQL
@@ -140,5 +142,7 @@ Default backend configuration:
 - Database URL: `jdbc:mysql://localhost:3306/personal_crm`
 - Database user: `personal_crm`
 - Database password: `personal_crm`
+- JWT issuer: `personal-crm`
+- JWT expiration: `3600` seconds
 
-The database settings can be changed with `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`.
+The database and JWT settings can be changed with `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `JWT_ISSUER`, and `JWT_EXPIRATION_SECONDS`.
