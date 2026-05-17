@@ -10,6 +10,7 @@ Personal CRM organizes personal and professional relationship data in an authent
 
 - User account registration
 - User login with credential validation
+- Authenticated profile and credential updates
 - JWT-secured protected API routes
 - Email normalization and duplicate email protection
 - BCrypt password hashing
@@ -36,16 +37,11 @@ The application is organized with a Spring Boot backend and a frontend workspace
 - H2 for tests
 - Maven
 
-## Data Model
+## Persistence
 
-The database schema is managed with Flyway. The user model stores account identity and authentication data:
+The backend uses Flyway migrations and JPA entities to keep the database schema explicit and versioned.
 
-- `id`
-- `name`
-- `email`
-- `password_hash`
-- `created_at`
-- `updated_at`
+The initial schema defines the `users` table, which stores account identity, authentication data, and the ownership base for protected CRM records.
 
 ## API
 
@@ -57,6 +53,7 @@ Authentication endpoints:
 | --- | --- | --- |
 | `POST` | `/auth/register` | Creates a user account with name, email, and password. |
 | `POST` | `/auth/login` | Authenticates a user and returns a bearer token. |
+| `PUT` | `/auth/credentials` | Updates the authenticated user's name, email, and optional password. |
 
 ### Register
 
@@ -109,9 +106,36 @@ Protected endpoints require the token in the `Authorization` header:
 Authorization: Bearer jwt-token
 ```
 
+### Update Credentials
+
+Requires `Authorization: Bearer jwt-token`.
+
+Request:
+
+```json
+{
+  "name": "Ada Lovelace",
+  "email": "ada.lovelace@example.com",
+  "currentPassword": "password123",
+  "newPassword": "new-password123"
+}
+```
+
+Success response:
+
+```json
+{
+  "id": 1,
+  "name": "Ada Lovelace",
+  "email": "ada.lovelace@example.com",
+  "token": "jwt-token",
+  "tokenType": "Bearer"
+}
+```
+
 ### Error Format
 
-Validation, duplicate email, and invalid credential errors are returned as JSON responses.
+Validation, duplicate email, invalid login, and invalid current password errors are returned as JSON responses.
 
 ```json
 {
