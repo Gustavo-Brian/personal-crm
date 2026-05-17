@@ -45,6 +45,8 @@ class UserLoginServiceTest {
         assertThat(response.id()).isNotNull();
         assertThat(response.name()).isEqualTo("Mary Jackson");
         assertThat(response.email()).isEqualTo("mary@example.com");
+        assertThat(response.token()).isNotBlank();
+        assertThat(response.tokenType()).isEqualTo("Bearer");
     }
 
     @Test

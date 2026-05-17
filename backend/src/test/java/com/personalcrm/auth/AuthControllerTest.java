@@ -124,7 +124,9 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.name").value("Margaret Hamilton"))
-                .andExpect(jsonPath("$.email").value("margaret@example.com"));
+                .andExpect(jsonPath("$.email").value("margaret@example.com"))
+                .andExpect(jsonPath("$.token", notNullValue()))
+                .andExpect(jsonPath("$.tokenType").value("Bearer"));
     }
 
     @Test

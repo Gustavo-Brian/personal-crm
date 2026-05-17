@@ -10,7 +10,7 @@ Personal CRM organizes personal and professional relationship data in an authent
 
 - User account registration
 - User login with credential validation
-- JWT token generation and validation service
+- JWT-secured protected API routes
 - Email normalization and duplicate email protection
 - BCrypt password hashing
 - User persistence with Spring Data JPA
@@ -56,7 +56,7 @@ Authentication endpoints:
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | `POST` | `/auth/register` | Creates a user account with name, email, and password. |
-| `POST` | `/auth/login` | Authenticates a user with email and password. |
+| `POST` | `/auth/login` | Authenticates a user and returns a bearer token. |
 
 ### Register
 
@@ -97,8 +97,16 @@ Success response:
 {
   "id": 1,
   "name": "Ada Lovelace",
-  "email": "ada@example.com"
+  "email": "ada@example.com",
+  "token": "jwt-token",
+  "tokenType": "Bearer"
 }
+```
+
+Protected endpoints require the token in the `Authorization` header:
+
+```http
+Authorization: Bearer jwt-token
 ```
 
 ### Error Format
