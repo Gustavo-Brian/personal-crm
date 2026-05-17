@@ -13,14 +13,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final UserRegistrationService userRegistrationService;
+    private final UserLoginService userLoginService;
 
-    public AuthController(UserRegistrationService userRegistrationService) {
+    public AuthController(UserRegistrationService userRegistrationService, UserLoginService userLoginService) {
         this.userRegistrationService = userRegistrationService;
+        this.userLoginService = userLoginService;
     }
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public RegisteredUserResponse register(@Valid @RequestBody RegisterUserRequest request) {
         return userRegistrationService.register(request);
+    }
+
+    @PostMapping("/login")
+    public AuthenticatedUserResponse login(@Valid @RequestBody LoginRequest request) {
+        return userLoginService.login(request);
     }
 }

@@ -1,0 +1,40 @@
+package com.personalcrm.auth;
+
+import com.personalcrm.user.User;
+import com.personalcrm.user.UserRepository;
+import java.util.Locale;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class UserLoginService {
+
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+
+    public UserLoginService(AuthenticationManager authenticationManager, UserRepository userRepository) {
+        this.authenticationManager = authenticationManager;
+        this.userRepository = userRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public AuthenticatedUserResponse login(LoginRequest request) {
+        String email = normalizeEmail(request.email());
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, request.password())
+        );
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return AuthenticatedUserResponse.from(user);
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
+}

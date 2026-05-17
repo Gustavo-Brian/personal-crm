@@ -4,6 +4,7 @@ import com.personalcrm.auth.DuplicateEmailException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,6 +18,12 @@ public class ApiExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleDuplicateEmail(DuplicateEmailException exception) {
         return ApiError.of(exception.getMessage());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiError handleAuthentication(AuthenticationException exception) {
+        return ApiError.of("Invalid email or password");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

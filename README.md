@@ -9,11 +9,12 @@ Personal CRM organizes personal and professional relationship data in an authent
 ## Capabilities
 
 - User account registration
+- User login with credential validation
 - Email normalization and duplicate email protection
 - BCrypt password hashing
 - User persistence with Spring Data JPA
 - Flyway-managed database schema
-- Validation errors and conflict responses in JSON
+- Validation, conflict, and authentication errors in JSON
 - Test configuration with an in-memory H2 database
 
 ## Architecture
@@ -26,7 +27,7 @@ The application is organized with a Spring Boot backend and a frontend workspace
 - Spring Boot
 - Spring Web
 - Spring Data JPA
-- Spring Security Crypto
+- Spring Security
 - Bean Validation
 - Flyway
 - MySQL
@@ -48,11 +49,16 @@ The database schema is managed with Flyway. The user model stores account identi
 
 Base path: `/api`
 
-Authentication:
+Authentication endpoints:
 
-- `POST /auth/register` creates a user account and returns the registered user id, name, and email.
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/auth/register` | Creates a user account with name, email, and password. |
+| `POST` | `/auth/login` | Authenticates a user with email and password. |
 
-Example request:
+### Register
+
+Request:
 
 ```json
 {
@@ -62,7 +68,7 @@ Example request:
 }
 ```
 
-Example response:
+Success response:
 
 ```json
 {
@@ -72,11 +78,45 @@ Example response:
 }
 ```
 
-Validation and duplicate email errors are returned as JSON responses.
+### Login
+
+Request:
+
+```json
+{
+  "email": "ada@example.com",
+  "password": "password123"
+}
+```
+
+Success response:
+
+```json
+{
+  "id": 1,
+  "name": "Ada Lovelace",
+  "email": "ada@example.com"
+}
+```
+
+### Error Format
+
+Validation, duplicate email, and invalid credential errors are returned as JSON responses.
+
+```json
+{
+  "message": "Validation failed",
+  "errors": {
+    "email": "must be a well-formed email address"
+  }
+}
+```
+
+Invalid login credentials return an authentication error without exposing whether the email exists.
 
 ## Testing
 
-The backend test suite covers the registration flow, password hashing, duplicate email protection, request validation errors, repository persistence, and Flyway migration startup with H2.
+The backend test suite covers registration, login, password hashing, duplicate email protection, request validation errors, repository persistence, and Flyway migration startup with H2.
 
 ## Local Setup
 
