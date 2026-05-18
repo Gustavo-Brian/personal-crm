@@ -11,6 +11,7 @@ Personal CRM organizes personal and professional relationship data in an authent
 - User account registration
 - User login with credential validation
 - Authenticated profile and credential updates
+- User-owned contact persistence
 - JWT-secured protected API routes
 - Email normalization and duplicate email protection
 - BCrypt password hashing
@@ -41,7 +42,7 @@ The application is organized with a Spring Boot backend and a frontend workspace
 
 The backend uses Flyway migrations and JPA entities to keep the database schema explicit and versioned.
 
-The initial schema defines the `users` table, which stores account identity, authentication data, and the ownership base for protected CRM records.
+The schema currently includes `users` for account identity and `contacts` for user-owned relationship records. Contact records are scoped by owner, which keeps each user's CRM data isolated at the persistence layer.
 
 ## API
 
@@ -150,7 +151,7 @@ Invalid login credentials return an authentication error without exposing whethe
 
 ## Testing
 
-The backend test suite covers registration, login, credential updates, JWT token handling, protected route authorization, password hashing, duplicate email protection, request validation errors, repository persistence, and Flyway migration startup with H2.
+The backend test suite covers registration, login, credential updates, contact persistence, JWT token handling, protected route authorization, password hashing, duplicate email protection, request validation errors, repository persistence, and Flyway migration startup with H2.
 
 ## Local Setup
 
