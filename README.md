@@ -150,7 +150,7 @@ Invalid login credentials return an authentication error without exposing whethe
 
 ## Testing
 
-The backend test suite covers registration, login, JWT token handling, protected route authorization, password hashing, duplicate email protection, request validation errors, repository persistence, and Flyway migration startup with H2.
+The backend test suite covers registration, login, credential updates, JWT token handling, protected route authorization, password hashing, duplicate email protection, request validation errors, repository persistence, and Flyway migration startup with H2.
 
 ## Local Setup
 
