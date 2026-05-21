@@ -2,6 +2,7 @@ package com.personalcrm.common;
 
 import com.personalcrm.auth.DuplicateEmailException;
 import com.personalcrm.auth.InvalidCurrentPasswordException;
+import com.personalcrm.contact.ContactNotFoundException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(InvalidCurrentPasswordException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ApiError handleInvalidCurrentPassword(InvalidCurrentPasswordException exception) {
+        return ApiError.of(exception.getMessage());
+    }
+
+    @ExceptionHandler(ContactNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleContactNotFound(ContactNotFoundException exception) {
         return ApiError.of(exception.getMessage());
     }
 

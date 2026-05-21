@@ -11,7 +11,7 @@ Personal CRM organizes personal and professional relationship data in an authent
 - User account registration
 - User login with credential validation
 - Authenticated profile and credential updates
-- User-owned contact persistence
+- User-owned contact CRUD API
 - JWT-secured protected API routes
 - Email normalization and duplicate email protection
 - BCrypt password hashing
@@ -55,6 +55,16 @@ Authentication endpoints:
 | `POST` | `/auth/register` | Creates a user account with name, email, and password. |
 | `POST` | `/auth/login` | Authenticates a user and returns a bearer token. |
 | `PUT` | `/auth/credentials` | Updates the authenticated user's name, email, and optional password. |
+
+Contact endpoints:
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/contacts` | Lists contacts owned by the authenticated user. |
+| `POST` | `/contacts` | Creates a contact for the authenticated user. |
+| `GET` | `/contacts/{id}` | Returns one owned contact by id. |
+| `PUT` | `/contacts/{id}` | Updates one owned contact by id. |
+| `DELETE` | `/contacts/{id}` | Deletes one owned contact by id. |
 
 ### Register
 
@@ -134,9 +144,58 @@ Success response:
 }
 ```
 
+### Create Contact
+
+Requires `Authorization: Bearer jwt-token`.
+
+Request:
+
+```json
+{
+  "name": "Grace Hopper",
+  "organization": "US Navy",
+  "jobTitle": "Computer Scientist",
+  "birthday": "1906-12-09"
+}
+```
+
+Success response:
+
+```json
+{
+  "id": 10,
+  "name": "Grace Hopper",
+  "organization": "US Navy",
+  "jobTitle": "Computer Scientist",
+  "birthday": "1906-12-09",
+  "createdAt": "2026-05-21T12:00:00",
+  "updatedAt": "2026-05-21T12:00:00"
+}
+```
+
+### List Contacts
+
+Requires `Authorization: Bearer jwt-token`.
+
+Success response:
+
+```json
+[
+  {
+    "id": 10,
+    "name": "Grace Hopper",
+    "organization": "US Navy",
+    "jobTitle": "Computer Scientist",
+    "birthday": "1906-12-09",
+    "createdAt": "2026-05-21T12:00:00",
+    "updatedAt": "2026-05-21T12:00:00"
+  }
+]
+```
+
 ### Error Format
 
-Validation, duplicate email, invalid login, and invalid current password errors are returned as JSON responses.
+Validation, duplicate email, invalid login, invalid current password, and missing contact errors are returned as JSON responses.
 
 ```json
 {
