@@ -1,58 +1,72 @@
 # Personal CRM
 
-A backend API for a personal CRM focused on authenticated user accounts and relationship management data.
+Personal CRM is a Spring Boot backend API for managing personal and professional relationships. It provides authenticated user accounts, JWT-based authorization, user-scoped contact records, contact details, database migrations, validation, and automated tests.
 
-## Overview
+## Features
 
-Personal CRM organizes personal and professional relationship data in an authenticated application. The backend provides the account foundation for user-owned CRM data, including persistence, database migrations, request validation, password hashing, and structured API error responses.
-
-## Capabilities
-
-- User account registration
-- User login with credential validation
+- User registration and login
+- JWT bearer authentication for protected routes
 - Authenticated profile and credential updates
-- User-owned contact CRUD API
-- JWT-secured protected API routes
+- User-owned contact CRUD operations
+- Contact details with phone numbers, email addresses, address data, birthday, organization, job title, and notes
 - Email normalization and duplicate email protection
 - BCrypt password hashing
-- User persistence with Spring Data JPA
-- Flyway-managed database schema
-- Validation, conflict, and authentication errors in JSON
-- Test configuration with an in-memory H2 database
+- Flyway-managed relational schema
+- Structured JSON responses for validation, authentication, conflict, and not found errors
+- Automated backend tests with an in-memory H2 database
+
+## Tech Stack
+
+| Area | Technology |
+| --- | --- |
+| Language | Java 21 |
+| Framework | Spring Boot |
+| API | Spring Web |
+| Persistence | Spring Data JPA |
+| Security | Spring Security, OAuth2 JOSE |
+| Validation | Bean Validation |
+| Database migrations | Flyway |
+| Database | MySQL |
+| Tests | JUnit, Spring Boot Test, H2 |
+| Build tool | Maven |
 
 ## Architecture
 
-The application is organized with a Spring Boot backend and a frontend workspace. The backend follows a layered structure with controllers, services, repositories, configuration classes, database migrations, and shared exception handling.
+The backend follows a layered structure that keeps HTTP handling, business rules, persistence, security, and shared error handling separated.
 
-## Backend
-
-- Java 21
-- Spring Boot
-- Spring Web
-- Spring Data JPA
-- Spring Security
-- Spring Security OAuth2 JOSE
-- Bean Validation
-- Flyway
-- MySQL
-- H2 for tests
-- Maven
+- Controllers expose the REST API and validate request bodies.
+- Services own application rules, normalization, ownership checks, and persistence orchestration.
+- Repositories provide database access through Spring Data JPA.
+- Domain entities model users, contacts, and contact detail data.
+- Flyway migrations keep schema changes explicit and repeatable.
+- Security configuration protects private routes with JWT bearer tokens.
+- Shared exception handling returns consistent JSON errors across the API.
 
 ## Persistence
 
-The backend uses Flyway migrations and JPA entities to keep the database schema explicit and versioned.
+The schema includes `users` for account identity and `contacts` for user-owned relationship records. Contact data is scoped by owner so each authenticated user can only access their own CRM records.
 
-The schema currently includes `users` for account identity and `contacts` for user-owned relationship records. Contact records are scoped by owner, which keeps each user's CRM data isolated at the persistence layer.
+Contacts support optional phone numbers, email addresses, address fields, notes, birthday, organization, and job title. Phone numbers and email addresses are stored as ordered contact details, while address and note fields are stored with the contact record.
 
-## API
+## API Reference
 
-Base path: `/api`
+Base URL:
+
+```text
+http://localhost:8080/api
+```
+
+Protected endpoints require an `Authorization` header:
+
+```http
+Authorization: Bearer jwt-token
+```
 
 Authentication endpoints:
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| `POST` | `/auth/register` | Creates a user account with name, email, and password. |
+| `POST` | `/auth/register` | Creates a user account. |
 | `POST` | `/auth/login` | Authenticates a user and returns a bearer token. |
 | `PUT` | `/auth/credentials` | Updates the authenticated user's name, email, and optional password. |
 
@@ -66,6 +80,8 @@ Contact endpoints:
 | `PUT` | `/contacts/{id}` | Updates one owned contact by id. |
 | `DELETE` | `/contacts/{id}` | Deletes one owned contact by id. |
 
+## API Examples
+
 ### Register
 
 Request:
@@ -78,7 +94,7 @@ Request:
 }
 ```
 
-Success response:
+Response:
 
 ```json
 {
@@ -99,7 +115,7 @@ Request:
 }
 ```
 
-Success response:
+Response:
 
 ```json
 {
@@ -111,15 +127,7 @@ Success response:
 }
 ```
 
-Protected endpoints require the token in the `Authorization` header:
-
-```http
-Authorization: Bearer jwt-token
-```
-
 ### Update Credentials
-
-Requires `Authorization: Bearer jwt-token`.
 
 Request:
 
@@ -132,7 +140,7 @@ Request:
 }
 ```
 
-Success response:
+Response:
 
 ```json
 {
@@ -146,8 +154,6 @@ Success response:
 
 ### Create Contact
 
-Requires `Authorization: Bearer jwt-token`.
-
 Request:
 
 ```json
@@ -155,11 +161,31 @@ Request:
   "name": "Grace Hopper",
   "organization": "US Navy",
   "jobTitle": "Computer Scientist",
-  "birthday": "1906-12-09"
+  "birthday": "1906-12-09",
+  "phoneNumbers": [
+    {
+      "label": "work",
+      "number": "+1-555-0100"
+    }
+  ],
+  "emailAddresses": [
+    {
+      "label": "primary",
+      "email": "grace.hopper@example.com"
+    }
+  ],
+  "address": {
+    "street": "1 Navy Way",
+    "city": "Arlington",
+    "state": "VA",
+    "postalCode": "22201",
+    "country": "USA"
+  },
+  "notes": "COBOL pioneer and compiler leader."
 }
 ```
 
-Success response:
+Response:
 
 ```json
 {
@@ -168,6 +194,26 @@ Success response:
   "organization": "US Navy",
   "jobTitle": "Computer Scientist",
   "birthday": "1906-12-09",
+  "phoneNumbers": [
+    {
+      "label": "work",
+      "number": "+1-555-0100"
+    }
+  ],
+  "emailAddresses": [
+    {
+      "label": "primary",
+      "email": "grace.hopper@example.com"
+    }
+  ],
+  "address": {
+    "street": "1 Navy Way",
+    "city": "Arlington",
+    "state": "VA",
+    "postalCode": "22201",
+    "country": "USA"
+  },
+  "notes": "COBOL pioneer and compiler leader.",
   "createdAt": "2026-05-21T12:00:00",
   "updatedAt": "2026-05-21T12:00:00"
 }
@@ -175,9 +221,7 @@ Success response:
 
 ### List Contacts
 
-Requires `Authorization: Bearer jwt-token`.
-
-Success response:
+Response:
 
 ```json
 [
@@ -187,15 +231,35 @@ Success response:
     "organization": "US Navy",
     "jobTitle": "Computer Scientist",
     "birthday": "1906-12-09",
+    "phoneNumbers": [
+      {
+        "label": "work",
+        "number": "+1-555-0100"
+      }
+    ],
+    "emailAddresses": [
+      {
+        "label": "primary",
+        "email": "grace.hopper@example.com"
+      }
+    ],
+    "address": {
+      "street": "1 Navy Way",
+      "city": "Arlington",
+      "state": "VA",
+      "postalCode": "22201",
+      "country": "USA"
+    },
+    "notes": "COBOL pioneer and compiler leader.",
     "createdAt": "2026-05-21T12:00:00",
     "updatedAt": "2026-05-21T12:00:00"
   }
 ]
 ```
 
-### Error Format
+### Error Response
 
-Validation, duplicate email, invalid login, invalid current password, and missing contact errors are returned as JSON responses.
+Validation, duplicate email, invalid login, invalid current password, and missing contact errors are returned in a consistent JSON format.
 
 ```json
 {
@@ -206,11 +270,7 @@ Validation, duplicate email, invalid login, invalid current password, and missin
 }
 ```
 
-Invalid login credentials return an authentication error without exposing whether the email exists.
-
-## Testing
-
-The backend test suite covers registration, login, credential updates, contact persistence, contact API behavior, JWT token handling, protected route authorization, password hashing, duplicate email protection, request validation errors, repository persistence, and Flyway migration startup with H2.
+Invalid login credentials return a generic authentication error without exposing whether the email exists.
 
 ## Local Setup
 
@@ -220,21 +280,48 @@ Requirements:
 - Maven
 - MySQL 8
 
-Backend:
+Run the backend tests:
 
 ```bash
 cd backend
 mvn test
+```
+
+Start the backend API:
+
+```bash
+cd backend
 mvn spring-boot:run
 ```
 
-Default backend configuration:
+Default API URL:
 
-- API URL: `http://localhost:8080/api`
-- Database URL: `jdbc:mysql://localhost:3306/personal_crm`
-- Database user: `personal_crm`
-- Database password: `personal_crm`
-- JWT issuer: `personal-crm`
-- JWT expiration: `3600` seconds
+```text
+http://localhost:8080/api
+```
 
-The database and JWT settings can be changed with `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `JWT_ISSUER`, and `JWT_EXPIRATION_SECONDS`.
+## Configuration
+
+The backend reads database and JWT settings from environment variables.
+
+| Variable | Default |
+| --- | --- |
+| `DB_URL` | `jdbc:mysql://localhost:3306/personal_crm?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC` |
+| `DB_USERNAME` | `personal_crm` |
+| `DB_PASSWORD` | `personal_crm` |
+| `JWT_SECRET` | `personal-crm-local-jwt-secret-key-change-me` |
+| `JWT_ISSUER` | `personal-crm` |
+| `JWT_EXPIRATION_SECONDS` | `3600` |
+
+## Testing
+
+The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
+
+```bash
+cd backend
+mvn test
+```
+
+## License
+
+This project is licensed under the MIT License.

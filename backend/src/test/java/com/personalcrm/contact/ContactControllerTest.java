@@ -71,7 +71,27 @@ class ContactControllerTest {
                   "name": "  Grace Hopper  ",
                   "organization": "  US Navy  ",
                   "jobTitle": "Computer Scientist",
-                  "birthday": "1906-12-09"
+                  "birthday": "1906-12-09",
+                  "phoneNumbers": [
+                    {
+                      "label": " work ",
+                      "number": " +1-555-0100 "
+                    }
+                  ],
+                  "emailAddresses": [
+                    {
+                      "label": "Primary",
+                      "email": "GRACE.HOPPER@EXAMPLE.COM"
+                    }
+                  ],
+                  "address": {
+                    "street": "  1 Navy Way  ",
+                    "city": "Arlington",
+                    "state": "VA",
+                    "postalCode": "22201",
+                    "country": "USA"
+                  },
+                  "notes": "  COBOL pioneer  "
                 }
                 """);
 
@@ -84,6 +104,18 @@ class ContactControllerTest {
                 .andExpect(jsonPath("$[0].organization").value("US Navy"))
                 .andExpect(jsonPath("$[0].jobTitle").value("Computer Scientist"))
                 .andExpect(jsonPath("$[0].birthday").value("1906-12-09"))
+                .andExpect(jsonPath("$[0].phoneNumbers", hasSize(1)))
+                .andExpect(jsonPath("$[0].phoneNumbers[0].label").value("work"))
+                .andExpect(jsonPath("$[0].phoneNumbers[0].number").value("+1-555-0100"))
+                .andExpect(jsonPath("$[0].emailAddresses", hasSize(1)))
+                .andExpect(jsonPath("$[0].emailAddresses[0].label").value("Primary"))
+                .andExpect(jsonPath("$[0].emailAddresses[0].email").value("grace.hopper@example.com"))
+                .andExpect(jsonPath("$[0].address.street").value("1 Navy Way"))
+                .andExpect(jsonPath("$[0].address.city").value("Arlington"))
+                .andExpect(jsonPath("$[0].address.state").value("VA"))
+                .andExpect(jsonPath("$[0].address.postalCode").value("22201"))
+                .andExpect(jsonPath("$[0].address.country").value("USA"))
+                .andExpect(jsonPath("$[0].notes").value("COBOL pioneer"))
                 .andExpect(jsonPath("$[0].createdAt", notNullValue()))
                 .andExpect(jsonPath("$[0].updatedAt", notNullValue()));
 
@@ -101,14 +133,48 @@ class ContactControllerTest {
                                   "name": "Grace Brewster Hopper",
                                   "organization": "",
                                   "jobTitle": "Rear Admiral",
-                                  "birthday": "1906-12-09"
+                                  "birthday": "1906-12-09",
+                                  "phoneNumbers": [
+                                    {
+                                      "label": "mobile",
+                                      "number": "+1-555-0111"
+                                    },
+                                    {
+                                      "label": "office",
+                                      "number": "+1-555-0112"
+                                    }
+                                  ],
+                                  "emailAddresses": [
+                                    {
+                                      "label": "primary",
+                                      "email": "GRACE.BREWSTER@EXAMPLE.COM"
+                                    }
+                                  ],
+                                  "address": {
+                                    "street": "",
+                                    "city": "",
+                                    "state": "",
+                                    "postalCode": "",
+                                    "country": ""
+                                  },
+                                  "notes": ""
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(contactId))
                 .andExpect(jsonPath("$.name").value("Grace Brewster Hopper"))
                 .andExpect(jsonPath("$.organization").doesNotExist())
-                .andExpect(jsonPath("$.jobTitle").value("Rear Admiral"));
+                .andExpect(jsonPath("$.jobTitle").value("Rear Admiral"))
+                .andExpect(jsonPath("$.phoneNumbers", hasSize(2)))
+                .andExpect(jsonPath("$.phoneNumbers[0].label").value("mobile"))
+                .andExpect(jsonPath("$.phoneNumbers[0].number").value("+1-555-0111"))
+                .andExpect(jsonPath("$.phoneNumbers[1].label").value("office"))
+                .andExpect(jsonPath("$.phoneNumbers[1].number").value("+1-555-0112"))
+                .andExpect(jsonPath("$.emailAddresses", hasSize(1)))
+                .andExpect(jsonPath("$.emailAddresses[0].label").value("primary"))
+                .andExpect(jsonPath("$.emailAddresses[0].email").value("grace.brewster@example.com"))
+                .andExpect(jsonPath("$.address").doesNotExist())
+                .andExpect(jsonPath("$.notes").doesNotExist());
 
         mockMvc.perform(delete("/contacts/{id}", contactId)
                         .header(HttpHeaders.AUTHORIZATION, bearer(token)))
@@ -158,6 +224,34 @@ class ContactControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed"))
                 .andExpect(jsonPath("$.errors.organization").value("Organization must have at most 160 characters"));
+
+        mockMvc.perform(post("/contacts")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Invalid Details",
+                                  "organization": "NASA",
+                                  "jobTitle": "Engineer",
+                                  "birthday": null,
+                                  "phoneNumbers": [
+                                    {
+                                      "label": "work",
+                                      "number": "   "
+                                    }
+                                  ],
+                                  "emailAddresses": [
+                                    {
+                                      "label": "primary",
+                                      "email": "not-an-email"
+                                    }
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.errors['phoneNumbers[0].number']").value("Phone number is required"))
+                .andExpect(jsonPath("$.errors['emailAddresses[0].email']").value("Email address must be valid"));
 
         Contact contact = contactRepository.findById(contactId).orElseThrow();
         assertThat(contact.getOrganization()).isEqualTo("NASA");

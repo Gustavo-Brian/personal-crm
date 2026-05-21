@@ -37,7 +37,11 @@ public class ContactService {
                 normalizeRequired(request.name()),
                 normalizeOptional(request.organization()),
                 normalizeOptional(request.jobTitle()),
-                request.birthday()
+                request.birthday(),
+                toAddress(request.address()),
+                normalizeOptional(request.notes()),
+                toPhoneNumbers(request.phoneNumbers()),
+                toEmailAddresses(request.emailAddresses())
         );
 
         return ContactResponse.from(contactRepository.save(contact));
@@ -60,6 +64,12 @@ public class ContactService {
                 normalizeOptional(request.organization()),
                 normalizeOptional(request.jobTitle()),
                 request.birthday()
+        );
+        contact.updateDetails(
+                toAddress(request.address()),
+                normalizeOptional(request.notes()),
+                toPhoneNumbers(request.phoneNumbers()),
+                toEmailAddresses(request.emailAddresses())
         );
 
         return ContactResponse.from(contact);
@@ -85,6 +95,51 @@ public class ContactService {
 
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private ContactAddress toAddress(ContactAddressRequest request) {
+        if (request == null) {
+            return null;
+        }
+
+        ContactAddress address = new ContactAddress(
+                normalizeOptional(request.street()),
+                normalizeOptional(request.city()),
+                normalizeOptional(request.state()),
+                normalizeOptional(request.postalCode()),
+                normalizeOptional(request.country())
+        );
+
+        if (address.isEmpty()) {
+            return null;
+        }
+        return address;
+    }
+
+    private List<ContactPhoneNumber> toPhoneNumbers(List<ContactPhoneRequest> requests) {
+        if (requests == null) {
+            return List.of();
+        }
+
+        return requests.stream()
+                .map(request -> new ContactPhoneNumber(
+                        normalizeOptional(request.label()),
+                        normalizeRequired(request.number())
+                ))
+                .toList();
+    }
+
+    private List<ContactEmailAddress> toEmailAddresses(List<ContactEmailRequest> requests) {
+        if (requests == null) {
+            return List.of();
+        }
+
+        return requests.stream()
+                .map(request -> new ContactEmailAddress(
+                        normalizeOptional(request.label()),
+                        normalizeEmail(request.email())
+                ))
+                .toList();
     }
 
     private String normalizeRequired(String value) {
