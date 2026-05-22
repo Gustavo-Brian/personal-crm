@@ -9,6 +9,7 @@ Personal CRM is a Spring Boot backend API for managing personal and professional
 - Authenticated profile and credential updates
 - User-owned contact CRUD operations
 - Contact details with phone numbers, email addresses, address data, birthday, organization, job title, and notes
+- Academic formation records linked to contacts
 - Email normalization and duplicate email protection
 - BCrypt password hashing
 - Flyway-managed relational schema
@@ -48,6 +49,8 @@ The schema includes `users` for account identity and `contacts` for user-owned r
 
 Contacts support optional phone numbers, email addresses, address fields, notes, birthday, organization, and job title. Phone numbers and email addresses are stored as ordered contact details, while address and note fields are stored with the contact record.
 
+Academic formations are linked to contacts and protected through the same ownership rules as contact records. This keeps education history available as structured CRM data without allowing one user to access another user's contact details.
+
 ## API Reference
 
 Base URL:
@@ -79,6 +82,16 @@ Contact endpoints:
 | `GET` | `/contacts/{id}` | Returns one owned contact by id. |
 | `PUT` | `/contacts/{id}` | Updates one owned contact by id. |
 | `DELETE` | `/contacts/{id}` | Deletes one owned contact by id. |
+
+Academic formation endpoints:
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/contacts/{contactId}/academic-formations` | Lists academic formations for an owned contact. |
+| `POST` | `/contacts/{contactId}/academic-formations` | Creates an academic formation for an owned contact. |
+| `GET` | `/contacts/{contactId}/academic-formations/{formationId}` | Returns one academic formation by id. |
+| `PUT` | `/contacts/{contactId}/academic-formations/{formationId}` | Updates one academic formation by id. |
+| `DELETE` | `/contacts/{contactId}/academic-formations/{formationId}` | Deletes one academic formation by id. |
 
 ## API Examples
 
@@ -257,9 +270,62 @@ Response:
 ]
 ```
 
+### Create Academic Formation
+
+Request:
+
+```json
+{
+  "institution": "Massachusetts Institute of Technology",
+  "degree": "BSc",
+  "fieldOfStudy": "Computer Science",
+  "startDate": "2010-02-01",
+  "endDate": "2014-12-15",
+  "description": "Undergraduate studies."
+}
+```
+
+Response:
+
+```json
+{
+  "id": 30,
+  "contactId": 10,
+  "institution": "Massachusetts Institute of Technology",
+  "degree": "BSc",
+  "fieldOfStudy": "Computer Science",
+  "startDate": "2010-02-01",
+  "endDate": "2014-12-15",
+  "description": "Undergraduate studies.",
+  "createdAt": "2026-05-21T12:00:00",
+  "updatedAt": "2026-05-21T12:00:00"
+}
+```
+
+### List Academic Formations
+
+Response:
+
+```json
+[
+  {
+    "id": 30,
+    "contactId": 10,
+    "institution": "Massachusetts Institute of Technology",
+    "degree": "BSc",
+    "fieldOfStudy": "Computer Science",
+    "startDate": "2010-02-01",
+    "endDate": "2014-12-15",
+    "description": "Undergraduate studies.",
+    "createdAt": "2026-05-21T12:00:00",
+    "updatedAt": "2026-05-21T12:00:00"
+  }
+]
+```
+
 ### Error Response
 
-Validation, duplicate email, invalid login, invalid current password, and missing contact errors are returned in a consistent JSON format.
+Validation, duplicate email, invalid login, invalid current password, missing contact, and missing academic formation errors are returned in a consistent JSON format.
 
 ```json
 {
@@ -315,7 +381,7 @@ The backend reads database and JWT settings from environment variables.
 
 ## Testing
 
-The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
+The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, academic formation behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
 
 ```bash
 cd backend
