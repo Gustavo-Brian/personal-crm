@@ -4,6 +4,7 @@ import com.personalcrm.auth.DuplicateEmailException;
 import com.personalcrm.auth.InvalidCurrentPasswordException;
 import com.personalcrm.contact.AcademicFormationNotFoundException;
 import com.personalcrm.contact.ContactNotFoundException;
+import com.personalcrm.group.GroupNotFoundException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(AcademicFormationNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiError handleAcademicFormationNotFound(AcademicFormationNotFoundException exception) {
+        return ApiError.of(exception.getMessage());
+    }
+
+    @ExceptionHandler(GroupNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleGroupNotFound(GroupNotFoundException exception) {
         return ApiError.of(exception.getMessage());
     }
 

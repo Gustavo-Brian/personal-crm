@@ -1,6 +1,8 @@
 # Personal CRM
 
-Personal CRM is a Spring Boot backend API for managing personal and professional relationships. It provides authenticated user accounts, JWT-based authorization, user-scoped contact records, contact details, database migrations, validation, and automated tests.
+Personal CRM is a full-stack web application for managing personal and professional relationships. The backend provides authenticated user accounts, JWT-based authorization, user-scoped contact records, contact details, database migrations, validation, and automated tests.
+
+The repository is structured as a full-stack product. The stack below lists technologies already present in the codebase; frontend technologies should be added here when the client application is introduced.
 
 ## Features
 
@@ -10,6 +12,7 @@ Personal CRM is a Spring Boot backend API for managing personal and professional
 - User-owned contact CRUD operations
 - Contact details with phone numbers, email addresses, address data, birthday, organization, job title, and notes
 - Academic formation records linked to contacts
+- User-owned contact groups for organizing relationship segments
 - Email normalization and duplicate email protection
 - BCrypt password hashing
 - Flyway-managed relational schema
@@ -20,25 +23,26 @@ Personal CRM is a Spring Boot backend API for managing personal and professional
 
 | Area | Technology |
 | --- | --- |
-| Language | Java 21 |
-| Framework | Spring Boot |
-| API | Spring Web |
-| Persistence | Spring Data JPA |
-| Security | Spring Security, OAuth2 JOSE |
-| Validation | Bean Validation |
-| Database migrations | Flyway |
+| Product | Full-stack web application |
+| Backend language | Java 21 |
+| Backend framework | Spring Boot |
+| Backend API | Spring Web |
+| Backend persistence | Spring Data JPA |
+| Backend security | Spring Security, OAuth2 JOSE |
+| Backend validation | Bean Validation |
+| Backend migrations | Flyway |
 | Database | MySQL |
-| Tests | JUnit, Spring Boot Test, H2 |
+| Backend tests | JUnit, Spring Boot Test, H2 |
 | Build tool | Maven |
 
 ## Architecture
 
-The backend follows a layered structure that keeps HTTP handling, business rules, persistence, security, and shared error handling separated.
+The application is organized as a full-stack product with a Spring Boot backend and a frontend workspace. The implemented backend follows a layered structure that keeps HTTP handling, business rules, persistence, security, and shared error handling separated.
 
 - Controllers expose the REST API and validate request bodies.
 - Services own application rules, normalization, ownership checks, and persistence orchestration.
 - Repositories provide database access through Spring Data JPA.
-- Domain entities model users, contacts, and contact detail data.
+- Domain entities model users, contacts, contact details, academic formations, and groups.
 - Flyway migrations keep schema changes explicit and repeatable.
 - Security configuration protects private routes with JWT bearer tokens.
 - Shared exception handling returns consistent JSON errors across the API.
@@ -50,6 +54,8 @@ The schema includes `users` for account identity and `contacts` for user-owned r
 Contacts support optional phone numbers, email addresses, address fields, notes, birthday, organization, and job title. Phone numbers and email addresses are stored as ordered contact details, while address and note fields are stored with the contact record.
 
 Academic formations are linked to contacts and protected through the same ownership rules as contact records. This keeps education history available as structured CRM data without allowing one user to access another user's contact details.
+
+Contact groups are owned directly by users and can be used to organize relationship segments such as mentors, clients, hiring contacts, friends, or professional communities. The group resource manages reusable metadata such as name, description, and display color.
 
 ## API Reference
 
@@ -92,6 +98,16 @@ Academic formation endpoints:
 | `GET` | `/contacts/{contactId}/academic-formations/{formationId}` | Returns one academic formation by id. |
 | `PUT` | `/contacts/{contactId}/academic-formations/{formationId}` | Updates one academic formation by id. |
 | `DELETE` | `/contacts/{contactId}/academic-formations/{formationId}` | Deletes one academic formation by id. |
+
+Group endpoints:
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/groups` | Lists groups owned by the authenticated user. |
+| `POST` | `/groups` | Creates a group for the authenticated user. |
+| `GET` | `/groups/{id}` | Returns one owned group by id. |
+| `PUT` | `/groups/{id}` | Updates one owned group by id. |
+| `DELETE` | `/groups/{id}` | Deletes one owned group by id. |
 
 ## API Examples
 
@@ -323,9 +339,51 @@ Response:
 ]
 ```
 
+### Create Group
+
+Request:
+
+```json
+{
+  "name": "Mentors",
+  "description": "People who help with career decisions.",
+  "colorHex": "#0EA5E9"
+}
+```
+
+Response:
+
+```json
+{
+  "id": 40,
+  "name": "Mentors",
+  "description": "People who help with career decisions.",
+  "colorHex": "#0EA5E9",
+  "createdAt": "2026-05-21T12:00:00",
+  "updatedAt": "2026-05-21T12:00:00"
+}
+```
+
+### List Groups
+
+Response:
+
+```json
+[
+  {
+    "id": 40,
+    "name": "Mentors",
+    "description": "People who help with career decisions.",
+    "colorHex": "#0EA5E9",
+    "createdAt": "2026-05-21T12:00:00",
+    "updatedAt": "2026-05-21T12:00:00"
+  }
+]
+```
+
 ### Error Response
 
-Validation, duplicate email, invalid login, invalid current password, missing contact, and missing academic formation errors are returned in a consistent JSON format.
+Validation, duplicate email, invalid login, invalid current password, missing contact, missing academic formation, and missing group errors are returned in a consistent JSON format.
 
 ```json
 {
@@ -381,7 +439,7 @@ The backend reads database and JWT settings from environment variables.
 
 ## Testing
 
-The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, academic formation behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
+The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, academic formation behavior, group behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
 
 ```bash
 cd backend
