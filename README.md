@@ -13,6 +13,7 @@ The repository is structured as a full-stack product. The stack below lists tech
 - Contact details with phone numbers, email addresses, address data, birthday, organization, job title, and notes
 - Academic formation records linked to contacts
 - User-owned contact groups for organizing relationship segments
+- Contact group memberships for assigning owned contacts to owned groups
 - Email normalization and duplicate email protection
 - BCrypt password hashing
 - Flyway-managed relational schema
@@ -56,6 +57,8 @@ Contacts support optional phone numbers, email addresses, address fields, notes,
 Academic formations are linked to contacts and protected through the same ownership rules as contact records. This keeps education history available as structured CRM data without allowing one user to access another user's contact details.
 
 Contact groups are owned directly by users and can be used to organize relationship segments such as mentors, clients, hiring contacts, friends, or professional communities. The group resource manages reusable metadata such as name, description, and display color.
+
+Group memberships connect user-owned groups to user-owned contacts through a join table with a uniqueness rule that prevents duplicate assignments.
 
 ## API Reference
 
@@ -108,6 +111,14 @@ Group endpoints:
 | `GET` | `/groups/{id}` | Returns one owned group by id. |
 | `PUT` | `/groups/{id}` | Updates one owned group by id. |
 | `DELETE` | `/groups/{id}` | Deletes one owned group by id. |
+
+Group membership endpoints:
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/groups/{groupId}/contacts` | Lists contacts assigned to an owned group. |
+| `POST` | `/groups/{groupId}/contacts/{contactId}` | Assigns an owned contact to an owned group. |
+| `DELETE` | `/groups/{groupId}/contacts/{contactId}` | Removes an owned contact from an owned group. |
 
 ## API Examples
 
@@ -381,6 +392,86 @@ Response:
 ]
 ```
 
+### Add Contact To Group
+
+Request:
+
+```text
+POST /groups/40/contacts/10
+```
+
+Response:
+
+```json
+{
+  "id": 10,
+  "name": "Grace Hopper",
+  "organization": "US Navy",
+  "jobTitle": "Computer Scientist",
+  "birthday": "1906-12-09",
+  "phoneNumbers": [
+    {
+      "label": "work",
+      "number": "+1-555-0100"
+    }
+  ],
+  "emailAddresses": [
+    {
+      "label": "primary",
+      "email": "grace.hopper@example.com"
+    }
+  ],
+  "address": {
+    "street": "1 Navy Way",
+    "city": "Arlington",
+    "state": "VA",
+    "postalCode": "22201",
+    "country": "USA"
+  },
+  "notes": "COBOL pioneer and compiler leader.",
+  "createdAt": "2026-05-21T12:00:00",
+  "updatedAt": "2026-05-21T12:00:00"
+}
+```
+
+### List Group Contacts
+
+Response:
+
+```json
+[
+  {
+    "id": 10,
+    "name": "Grace Hopper",
+    "organization": "US Navy",
+    "jobTitle": "Computer Scientist",
+    "birthday": "1906-12-09",
+    "phoneNumbers": [
+      {
+        "label": "work",
+        "number": "+1-555-0100"
+      }
+    ],
+    "emailAddresses": [
+      {
+        "label": "primary",
+        "email": "grace.hopper@example.com"
+      }
+    ],
+    "address": {
+      "street": "1 Navy Way",
+      "city": "Arlington",
+      "state": "VA",
+      "postalCode": "22201",
+      "country": "USA"
+    },
+    "notes": "COBOL pioneer and compiler leader.",
+    "createdAt": "2026-05-21T12:00:00",
+    "updatedAt": "2026-05-21T12:00:00"
+  }
+]
+```
+
 ### Error Response
 
 Validation, duplicate email, invalid login, invalid current password, missing contact, missing academic formation, and missing group errors are returned in a consistent JSON format.
@@ -439,7 +530,7 @@ The backend reads database and JWT settings from environment variables.
 
 ## Testing
 
-The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, academic formation behavior, group behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
+The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, academic formation behavior, group behavior, group membership behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
 
 ```bash
 cd backend

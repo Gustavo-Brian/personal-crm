@@ -1,5 +1,9 @@
 package com.personalcrm.group;
 
+import com.personalcrm.contact.Contact;
+import com.personalcrm.contact.ContactNotFoundException;
+import com.personalcrm.contact.ContactRepository;
+import com.personalcrm.contact.ContactResponse;
 import com.personalcrm.user.User;
 import com.personalcrm.user.UserRepository;
 import java.util.List;
@@ -12,10 +16,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class GroupService {
 
     private final ContactGroupRepository groupRepository;
+    private final ContactGroupMembershipRepository membershipRepository;
+    private final ContactRepository contactRepository;
     private final UserRepository userRepository;
 
-    public GroupService(ContactGroupRepository groupRepository, UserRepository userRepository) {
+    public GroupService(
+            ContactGroupRepository groupRepository,
+            ContactGroupMembershipRepository membershipRepository,
+            ContactRepository contactRepository,
+            UserRepository userRepository
+    ) {
         this.groupRepository = groupRepository;
+        this.membershipRepository = membershipRepository;
+        this.contactRepository = contactRepository;
         this.userRepository = userRepository;
     }
 
@@ -71,6 +84,45 @@ public class GroupService {
         groupRepository.delete(group);
     }
 
+    @Transactional(readOnly = true)
+    public List<ContactResponse> listGroupContacts(String authenticatedEmail, Long groupId) {
+        User owner = findAuthenticatedUser(authenticatedEmail);
+        findOwnedGroup(groupId, owner.getId());
+
+        return membershipRepository.findByGroupIdAndGroupOwnerIdAndContactOwnerIdOrderByContactNameAsc(
+                        groupId,
+                        owner.getId(),
+                        owner.getId()
+                )
+                .stream()
+                .map(ContactGroupMembership::getContact)
+                .map(ContactResponse::from)
+                .toList();
+    }
+
+    @Transactional
+    public ContactResponse addContactToGroup(String authenticatedEmail, Long groupId, Long contactId) {
+        User owner = findAuthenticatedUser(authenticatedEmail);
+        ContactGroup group = findOwnedGroup(groupId, owner.getId());
+        Contact contact = findOwnedContact(contactId, owner.getId());
+
+        if (!membershipRepository.existsByGroupIdAndContactId(group.getId(), contact.getId())) {
+            membershipRepository.save(new ContactGroupMembership(group, contact));
+        }
+
+        return ContactResponse.from(contact);
+    }
+
+    @Transactional
+    public void removeContactFromGroup(String authenticatedEmail, Long groupId, Long contactId) {
+        User owner = findAuthenticatedUser(authenticatedEmail);
+        ContactGroup group = findOwnedGroup(groupId, owner.getId());
+        Contact contact = findOwnedContact(contactId, owner.getId());
+
+        membershipRepository.findByGroupIdAndContactId(group.getId(), contact.getId())
+                .ifPresent(membershipRepository::delete);
+    }
+
     private User findAuthenticatedUser(String authenticatedEmail) {
         return userRepository.findByEmail(normalizeEmail(authenticatedEmail))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -79,6 +131,11 @@ public class GroupService {
     private ContactGroup findOwnedGroup(Long groupId, Long ownerId) {
         return groupRepository.findByIdAndOwnerId(groupId, ownerId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
+    }
+
+    private Contact findOwnedContact(Long contactId, Long ownerId) {
+        return contactRepository.findByIdAndOwnerId(contactId, ownerId)
+                .orElseThrow(() -> new ContactNotFoundException(contactId));
     }
 
     private String normalizeEmail(String email) {

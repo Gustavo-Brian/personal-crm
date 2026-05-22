@@ -1,5 +1,6 @@
 package com.personalcrm.group;
 
+import com.personalcrm.contact.ContactResponse;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.List;
@@ -53,5 +54,30 @@ public class GroupController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteGroup(Principal principal, @PathVariable Long id) {
         groupService.deleteGroup(principal.getName(), id);
+    }
+
+    @GetMapping("/{groupId}/contacts")
+    public List<ContactResponse> listGroupContacts(Principal principal, @PathVariable Long groupId) {
+        return groupService.listGroupContacts(principal.getName(), groupId);
+    }
+
+    @PostMapping("/{groupId}/contacts/{contactId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ContactResponse addContactToGroup(
+            Principal principal,
+            @PathVariable Long groupId,
+            @PathVariable Long contactId
+    ) {
+        return groupService.addContactToGroup(principal.getName(), groupId, contactId);
+    }
+
+    @DeleteMapping("/{groupId}/contacts/{contactId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeContactFromGroup(
+            Principal principal,
+            @PathVariable Long groupId,
+            @PathVariable Long contactId
+    ) {
+        groupService.removeContactFromGroup(principal.getName(), groupId, contactId);
     }
 }
