@@ -4,6 +4,7 @@ import com.personalcrm.auth.DuplicateEmailException;
 import com.personalcrm.auth.InvalidCurrentPasswordException;
 import com.personalcrm.contact.AcademicFormationNotFoundException;
 import com.personalcrm.contact.ContactNotFoundException;
+import com.personalcrm.contact.ImportantDateNotFoundException;
 import com.personalcrm.group.GroupNotFoundException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,6 +46,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(AcademicFormationNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiError handleAcademicFormationNotFound(AcademicFormationNotFoundException exception) {
+        return ApiError.of(exception.getMessage());
+    }
+
+    @ExceptionHandler(ImportantDateNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleImportantDateNotFound(ImportantDateNotFoundException exception) {
         return ApiError.of(exception.getMessage());
     }
 

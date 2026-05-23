@@ -12,6 +12,7 @@ The repository is structured as a full-stack product. The stack below lists tech
 - User-owned contact CRUD operations
 - Contact details with phone numbers, email addresses, address data, birthday, organization, job title, and notes
 - Academic formation records linked to contacts
+- Important dates linked to contacts
 - User-owned contact groups for organizing relationship segments
 - Contact group memberships for assigning owned contacts to owned groups
 - Email normalization and duplicate email protection
@@ -43,7 +44,7 @@ The application is organized as a full-stack product with a Spring Boot backend 
 - Controllers expose the REST API and validate request bodies.
 - Services own application rules, normalization, ownership checks, and persistence orchestration.
 - Repositories provide database access through Spring Data JPA.
-- Domain entities model users, contacts, contact details, academic formations, and groups.
+- Domain entities model users, contacts, contact details, academic formations, important dates, and groups.
 - Flyway migrations keep schema changes explicit and repeatable.
 - Security configuration protects private routes with JWT bearer tokens.
 - Shared exception handling returns consistent JSON errors across the API.
@@ -55,6 +56,8 @@ The schema includes `users` for account identity and `contacts` for user-owned r
 Contacts support optional phone numbers, email addresses, address fields, notes, birthday, organization, and job title. Phone numbers and email addresses are stored as ordered contact details, while address and note fields are stored with the contact record.
 
 Academic formations are linked to contacts and protected through the same ownership rules as contact records. This keeps education history available as structured CRM data without allowing one user to access another user's contact details.
+
+Important dates are linked to contacts and can store relationship-specific dates such as birthdays, anniversaries, work events, family dates, or other reminders. Each record keeps a title, date, category, and optional description under the same owner-scoped access rules as contacts.
 
 Contact groups are owned directly by users and can be used to organize relationship segments such as mentors, clients, hiring contacts, friends, or professional communities. The group resource manages reusable metadata such as name, description, and display color.
 
@@ -101,6 +104,18 @@ Academic formation endpoints:
 | `GET` | `/contacts/{contactId}/academic-formations/{formationId}` | Returns one academic formation by id. |
 | `PUT` | `/contacts/{contactId}/academic-formations/{formationId}` | Updates one academic formation by id. |
 | `DELETE` | `/contacts/{contactId}/academic-formations/{formationId}` | Deletes one academic formation by id. |
+
+Important date endpoints:
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/contacts/{contactId}/important-dates` | Lists important dates for an owned contact. |
+| `POST` | `/contacts/{contactId}/important-dates` | Creates an important date for an owned contact. |
+| `GET` | `/contacts/{contactId}/important-dates/{importantDateId}` | Returns one important date by id. |
+| `PUT` | `/contacts/{contactId}/important-dates/{importantDateId}` | Updates one important date by id. |
+| `DELETE` | `/contacts/{contactId}/important-dates/{importantDateId}` | Deletes one important date by id. |
+
+Valid important date types are `BIRTHDAY`, `WORK`, `FAMILY`, `ANNIVERSARY`, and `OTHER`.
 
 Group endpoints:
 
@@ -350,6 +365,53 @@ Response:
 ]
 ```
 
+### Create Important Date
+
+Request:
+
+```json
+{
+  "title": "Birthday dinner",
+  "date": "2026-06-15",
+  "type": "BIRTHDAY",
+  "description": "Dinner reservation."
+}
+```
+
+Response:
+
+```json
+{
+  "id": 35,
+  "contactId": 10,
+  "title": "Birthday dinner",
+  "date": "2026-06-15",
+  "type": "BIRTHDAY",
+  "description": "Dinner reservation.",
+  "createdAt": "2026-05-21T12:00:00",
+  "updatedAt": "2026-05-21T12:00:00"
+}
+```
+
+### List Important Dates
+
+Response:
+
+```json
+[
+  {
+    "id": 35,
+    "contactId": 10,
+    "title": "Birthday dinner",
+    "date": "2026-06-15",
+    "type": "BIRTHDAY",
+    "description": "Dinner reservation.",
+    "createdAt": "2026-05-21T12:00:00",
+    "updatedAt": "2026-05-21T12:00:00"
+  }
+]
+```
+
 ### Create Group
 
 Request:
@@ -474,7 +536,7 @@ Response:
 
 ### Error Response
 
-Validation, duplicate email, invalid login, invalid current password, missing contact, missing academic formation, and missing group errors are returned in a consistent JSON format.
+Validation, duplicate email, invalid login, invalid current password, missing contact, missing academic formation, missing important date, and missing group errors are returned in a consistent JSON format.
 
 ```json
 {
@@ -530,7 +592,7 @@ The backend reads database and JWT settings from environment variables.
 
 ## Testing
 
-The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, academic formation behavior, group behavior, group membership behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
+The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, academic formation behavior, important date behavior, group behavior, group membership behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
 
 ```bash
 cd backend
