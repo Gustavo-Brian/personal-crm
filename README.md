@@ -1,6 +1,6 @@
 # Personal CRM
 
-Personal CRM is a full-stack web application for managing personal and professional relationships. The backend provides authenticated user accounts, JWT-based authorization, user-scoped contact records, contact details, database migrations, validation, and automated tests.
+Personal CRM is a full-stack web application for managing personal and professional relationships. The backend provides authenticated user accounts, JWT-based authorization, user-scoped contact records, contact details, appointments, database migrations, validation, and automated tests.
 
 The repository is structured as a full-stack product. The stack below lists technologies already present in the codebase.
 
@@ -14,6 +14,7 @@ The repository is structured as a full-stack product. The stack below lists tech
 - Academic formation records linked to contacts
 - Important dates linked to contacts
 - Automatic synchronization between contact birthdays and important dates
+- Appointments with optional contact links and upcoming appointment queries
 - User-owned contact groups for organizing relationship segments
 - Contact group memberships for assigning owned contacts to owned groups
 - Email normalization and duplicate email protection
@@ -45,7 +46,7 @@ The application is organized as a full-stack product with a Spring Boot backend 
 - Controllers expose the REST API and validate request bodies.
 - Services own application rules, normalization, ownership checks, and persistence orchestration.
 - Repositories provide database access through Spring Data JPA.
-- Domain entities model users, contacts, contact details, academic formations, important dates, and groups.
+- Domain entities model users, contacts, contact details, academic formations, important dates, appointments, and groups.
 - Flyway migrations keep schema changes explicit and repeatable.
 - Security configuration protects private routes with JWT bearer tokens.
 - Shared exception handling returns consistent JSON errors across the API.
@@ -61,6 +62,8 @@ Academic formations are linked to contacts and protected through the same owners
 Important dates are linked to contacts and can store relationship-specific dates such as birthdays, anniversaries, work events, family dates, or other reminders. Each record keeps a title, date, category, and optional description under the same owner-scoped access rules as contacts.
 
 Contact birthdays are synchronized with important dates so birthday changes remain available both as contact profile data and as date-based CRM reminders. Updating or removing a contact birthday updates the related `BIRTHDAY` important date, and changes to `BIRTHDAY` important dates are reflected back on the contact.
+
+Appointments are owned by users and can optionally link to a contact. They store start time, optional end time, location, and description, with upcoming queries ordered by start time.
 
 Contact groups are owned directly by users and can be used to organize relationship segments such as mentors, clients, hiring contacts, friends, or professional communities. The group resource manages reusable metadata such as name, description, and display color.
 
@@ -119,6 +122,17 @@ Important date endpoints:
 | `DELETE` | `/contacts/{contactId}/important-dates/{importantDateId}` | Deletes one important date by id. |
 
 Valid important date types are `BIRTHDAY`, `WORK`, `FAMILY`, `ANNIVERSARY`, and `OTHER`.
+
+Appointment endpoints:
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/appointments` | Lists appointments owned by the authenticated user. |
+| `GET` | `/appointments/upcoming` | Lists upcoming owned appointments ordered by start time. |
+| `POST` | `/appointments` | Creates an appointment for the authenticated user. |
+| `GET` | `/appointments/{id}` | Returns one owned appointment by id. |
+| `PUT` | `/appointments/{id}` | Updates one owned appointment by id. |
+| `DELETE` | `/appointments/{id}` | Deletes one owned appointment by id. |
 
 Group endpoints:
 
@@ -415,6 +429,57 @@ Response:
 ]
 ```
 
+### Create Appointment
+
+Request:
+
+```json
+{
+  "title": "Coffee chat",
+  "startsAt": "2030-02-10T09:30:00",
+  "endsAt": "2030-02-10T10:30:00",
+  "location": "Downtown Cafe",
+  "description": "Monthly relationship check-in.",
+  "contactId": 10
+}
+```
+
+Response:
+
+```json
+{
+  "id": 50,
+  "contactId": 10,
+  "title": "Coffee chat",
+  "startsAt": "2030-02-10T09:30:00",
+  "endsAt": "2030-02-10T10:30:00",
+  "location": "Downtown Cafe",
+  "description": "Monthly relationship check-in.",
+  "createdAt": "2026-05-21T12:00:00",
+  "updatedAt": "2026-05-21T12:00:00"
+}
+```
+
+### List Upcoming Appointments
+
+Response:
+
+```json
+[
+  {
+    "id": 50,
+    "contactId": 10,
+    "title": "Coffee chat",
+    "startsAt": "2030-02-10T09:30:00",
+    "endsAt": "2030-02-10T10:30:00",
+    "location": "Downtown Cafe",
+    "description": "Monthly relationship check-in.",
+    "createdAt": "2026-05-21T12:00:00",
+    "updatedAt": "2026-05-21T12:00:00"
+  }
+]
+```
+
 ### Create Group
 
 Request:
@@ -539,7 +604,7 @@ Response:
 
 ### Error Response
 
-Validation, duplicate email, invalid login, invalid current password, missing contact, missing academic formation, missing important date, and missing group errors are returned in a consistent JSON format.
+Validation, duplicate email, invalid login, invalid current password, missing contact, missing academic formation, missing important date, missing appointment, and missing group errors are returned in a consistent JSON format.
 
 ```json
 {
@@ -652,7 +717,7 @@ Backend environment variables:
 
 ## Testing
 
-The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, birthday synchronization, academic formation behavior, important date behavior, group behavior, group membership behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
+The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, birthday synchronization, academic formation behavior, important date behavior, appointment behavior, group behavior, group membership behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
 
 ```bash
 cd backend

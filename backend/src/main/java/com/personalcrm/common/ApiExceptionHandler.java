@@ -2,6 +2,7 @@ package com.personalcrm.common;
 
 import com.personalcrm.auth.DuplicateEmailException;
 import com.personalcrm.auth.InvalidCurrentPasswordException;
+import com.personalcrm.appointment.AppointmentNotFoundException;
 import com.personalcrm.contact.AcademicFormationNotFoundException;
 import com.personalcrm.contact.ContactNotFoundException;
 import com.personalcrm.contact.ImportantDateNotFoundException;
@@ -34,6 +35,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(InvalidCurrentPasswordException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ApiError handleInvalidCurrentPassword(InvalidCurrentPasswordException exception) {
+        return ApiError.of(exception.getMessage());
+    }
+
+    @ExceptionHandler(AppointmentNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleAppointmentNotFound(AppointmentNotFoundException exception) {
         return ApiError.of(exception.getMessage());
     }
 
