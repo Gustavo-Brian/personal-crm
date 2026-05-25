@@ -8,5 +8,7 @@ public interface ImportantDateRepository extends JpaRepository<ImportantDate, Lo
 
     List<ImportantDate> findByContactIdOrderByDateAscTitleAsc(Long contactId);
 
+    List<ImportantDate> findByContactIdAndTypeOrderByDateAscTitleAsc(Long contactId, ImportantDateType type);
+
     Optional<ImportantDate> findByIdAndContactId(Long id, Long contactId);
 }

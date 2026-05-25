@@ -162,6 +162,10 @@ public class Contact {
         this.birthday = birthday;
     }
 
+    public void updateBirthday(LocalDate birthday) {
+        this.birthday = birthday;
+    }
+
     public void updateDetails(
             ContactAddress address,
             String notes,

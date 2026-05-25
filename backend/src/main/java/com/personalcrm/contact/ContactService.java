@@ -12,10 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class ContactService {
 
     private final ContactRepository contactRepository;
+    private final BirthdayImportantDateSynchronizer birthdayImportantDateSynchronizer;
     private final UserRepository userRepository;
 
-    public ContactService(ContactRepository contactRepository, UserRepository userRepository) {
+    public ContactService(
+            ContactRepository contactRepository,
+            BirthdayImportantDateSynchronizer birthdayImportantDateSynchronizer,
+            UserRepository userRepository
+    ) {
         this.contactRepository = contactRepository;
+        this.birthdayImportantDateSynchronizer = birthdayImportantDateSynchronizer;
         this.userRepository = userRepository;
     }
 
@@ -44,7 +50,10 @@ public class ContactService {
                 toEmailAddresses(request.emailAddresses())
         );
 
-        return ContactResponse.from(contactRepository.save(contact));
+        Contact savedContact = contactRepository.save(contact);
+        birthdayImportantDateSynchronizer.syncBirthdayDateFromContact(savedContact);
+
+        return ContactResponse.from(savedContact);
     }
 
     @Transactional(readOnly = true)
@@ -71,6 +80,7 @@ public class ContactService {
                 toPhoneNumbers(request.phoneNumbers()),
                 toEmailAddresses(request.emailAddresses())
         );
+        birthdayImportantDateSynchronizer.syncBirthdayDateFromContact(contact);
 
         return ContactResponse.from(contact);
     }

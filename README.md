@@ -2,7 +2,7 @@
 
 Personal CRM is a full-stack web application for managing personal and professional relationships. The backend provides authenticated user accounts, JWT-based authorization, user-scoped contact records, contact details, database migrations, validation, and automated tests.
 
-The repository is structured as a full-stack product. The stack below lists technologies already present in the codebase; frontend technologies should be added here when the client application is introduced.
+The repository is structured as a full-stack product. The stack below lists technologies already present in the codebase.
 
 ## Features
 
@@ -13,6 +13,7 @@ The repository is structured as a full-stack product. The stack below lists tech
 - Contact details with phone numbers, email addresses, address data, birthday, organization, job title, and notes
 - Academic formation records linked to contacts
 - Important dates linked to contacts
+- Automatic synchronization between contact birthdays and important dates
 - User-owned contact groups for organizing relationship segments
 - Contact group memberships for assigning owned contacts to owned groups
 - Email normalization and duplicate email protection
@@ -58,6 +59,8 @@ Contacts support optional phone numbers, email addresses, address fields, notes,
 Academic formations are linked to contacts and protected through the same ownership rules as contact records. This keeps education history available as structured CRM data without allowing one user to access another user's contact details.
 
 Important dates are linked to contacts and can store relationship-specific dates such as birthdays, anniversaries, work events, family dates, or other reminders. Each record keeps a title, date, category, and optional description under the same owner-scoped access rules as contacts.
+
+Contact birthdays are synchronized with important dates so birthday changes remain available both as contact profile data and as date-based CRM reminders. Updating or removing a contact birthday updates the related `BIRTHDAY` important date, and changes to `BIRTHDAY` important dates are reflected back on the contact.
 
 Contact groups are owned directly by users and can be used to organize relationship segments such as mentors, clients, hiring contacts, friends, or professional communities. The group resource manages reusable metadata such as name, description, and display color.
 
@@ -557,6 +560,45 @@ Requirements:
 - Maven
 - MySQL 8
 
+### Database Setup
+
+Create the local database user before starting the backend:
+
+```sql
+CREATE DATABASE IF NOT EXISTS personal_crm;
+CREATE USER IF NOT EXISTS 'personal_crm'@'localhost' IDENTIFIED BY 'personal_crm';
+GRANT ALL PRIVILEGES ON personal_crm.* TO 'personal_crm'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### Backend Environment
+
+The backend reads database and JWT settings from environment variables. Set them in the same terminal session used to start Spring Boot.
+
+PowerShell:
+
+```powershell
+$env:DB_URL="jdbc:mysql://localhost:3306/personal_crm?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+$env:DB_USERNAME="personal_crm"
+$env:DB_PASSWORD="personal_crm"
+$env:JWT_SECRET="replace-with-a-long-random-secret"
+$env:JWT_ISSUER="personal-crm"
+$env:JWT_EXPIRATION_SECONDS="3600"
+```
+
+Bash:
+
+```bash
+export DB_URL="jdbc:mysql://localhost:3306/personal_crm?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+export DB_USERNAME="personal_crm"
+export DB_PASSWORD="personal_crm"
+export JWT_SECRET="replace-with-a-long-random-secret"
+export JWT_ISSUER="personal-crm"
+export JWT_EXPIRATION_SECONDS="3600"
+```
+
+Use a private, high-entropy value for `JWT_SECRET` outside local development.
+
 Run the backend tests:
 
 ```bash
@@ -577,9 +619,27 @@ Default API URL:
 http://localhost:8080/api
 ```
 
+### Frontend Workspace
+
+The frontend workspace is `frontend/`. No frontend runtime is required to run the backend API.
+
+When a frontend package is present, install dependencies and start the client from that workspace:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend environment files should stay out of Git. The client API base URL should point to:
+
+```text
+http://localhost:8080/api
+```
+
 ## Configuration
 
-The backend reads database and JWT settings from environment variables.
+Backend environment variables:
 
 | Variable | Default |
 | --- | --- |
@@ -592,7 +652,7 @@ The backend reads database and JWT settings from environment variables.
 
 ## Testing
 
-The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, academic formation behavior, important date behavior, group behavior, group membership behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
+The backend test suite covers authentication, credential updates, JWT token handling, protected route authorization, contact persistence, contact API behavior, birthday synchronization, academic formation behavior, important date behavior, group behavior, group membership behavior, ownership isolation, request validation, repository persistence, password hashing, duplicate email protection, and Flyway migration startup with H2.
 
 ```bash
 cd backend

@@ -13,15 +13,18 @@ public class ImportantDateService {
 
     private final ImportantDateRepository importantDateRepository;
     private final ContactRepository contactRepository;
+    private final BirthdayImportantDateSynchronizer birthdayImportantDateSynchronizer;
     private final UserRepository userRepository;
 
     public ImportantDateService(
             ImportantDateRepository importantDateRepository,
             ContactRepository contactRepository,
+            BirthdayImportantDateSynchronizer birthdayImportantDateSynchronizer,
             UserRepository userRepository
     ) {
         this.importantDateRepository = importantDateRepository;
         this.contactRepository = contactRepository;
+        this.birthdayImportantDateSynchronizer = birthdayImportantDateSynchronizer;
         this.userRepository = userRepository;
     }
 
@@ -50,7 +53,10 @@ public class ImportantDateService {
                 normalizeOptional(request.description())
         );
 
-        return ImportantDateResponse.from(importantDateRepository.save(importantDate));
+        ImportantDate savedImportantDate = importantDateRepository.save(importantDate);
+        birthdayImportantDateSynchronizer.syncContactBirthdayFromImportantDate(contact, savedImportantDate);
+
+        return ImportantDateResponse.from(savedImportantDate);
     }
 
     @Transactional(readOnly = true)
@@ -68,7 +74,7 @@ public class ImportantDateService {
             Long importantDateId,
             ImportantDateRequest request
     ) {
-        findOwnedContact(authenticatedEmail, contactId);
+        Contact contact = findOwnedContact(authenticatedEmail, contactId);
         ImportantDate importantDate = findImportantDate(contactId, importantDateId);
         importantDate.updateDetails(
                 normalizeRequired(request.title()),
@@ -76,16 +82,23 @@ public class ImportantDateService {
                 request.type(),
                 normalizeOptional(request.description())
         );
+        importantDateRepository.flush();
+        birthdayImportantDateSynchronizer.syncContactBirthdayFromImportantDate(contact, importantDate);
 
         return ImportantDateResponse.from(importantDate);
     }
 
     @Transactional
     public void deleteImportantDate(String authenticatedEmail, Long contactId, Long importantDateId) {
-        findOwnedContact(authenticatedEmail, contactId);
+        Contact contact = findOwnedContact(authenticatedEmail, contactId);
         ImportantDate importantDate = findImportantDate(contactId, importantDateId);
+        boolean deletingBirthday = importantDate.getType() == ImportantDateType.BIRTHDAY;
 
         importantDateRepository.delete(importantDate);
+        importantDateRepository.flush();
+        if (deletingBirthday) {
+            birthdayImportantDateSynchronizer.syncContactBirthdayAfterImportantDateDeletion(contact);
+        }
     }
 
     private Contact findOwnedContact(String authenticatedEmail, Long contactId) {
