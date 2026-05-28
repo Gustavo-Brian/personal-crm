@@ -257,6 +257,65 @@ class AppointmentControllerTest {
         assertThat(appointment.getTitle()).isEqualTo("Private appointment");
     }
 
+    @Test
+    void rejectsAppointmentLinkedToContactOwnedByAnotherUser() throws Exception {
+        String ownerToken = createTokenFor("Appointment Owner", "appointment-contact-owner@example.com");
+        String otherToken = createTokenFor("Contact Owner", "appointment-contact-other@example.com");
+        Long ownedContactId = createContact(ownerToken);
+        Long foreignContactId = createContact(otherToken);
+
+        mockMvc.perform(post("/appointments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(ownerToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Cross-owner appointment",
+                                  "startsAt": "2030-03-10T09:00:00",
+                                  "endsAt": "2030-03-10T10:00:00",
+                                  "location": "Office",
+                                  "description": "Should not be created.",
+                                  "contactId": %d
+                                }
+                                """.formatted(foreignContactId)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Contact not found: " + foreignContactId));
+
+        assertThat(appointmentRepository.count()).isZero();
+
+        Long appointmentId = createAppointment(ownerToken, """
+                {
+                  "title": "Owned appointment",
+                  "startsAt": "2030-03-11T09:00:00",
+                  "endsAt": "2030-03-11T10:00:00",
+                  "location": "Office",
+                  "description": "Valid owner contact.",
+                  "contactId": %d
+                }
+                """.formatted(ownedContactId));
+
+        mockMvc.perform(put("/appointments/{id}", appointmentId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(ownerToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Hijacked appointment",
+                                  "startsAt": "2030-03-12T09:00:00",
+                                  "endsAt": "2030-03-12T10:00:00",
+                                  "location": "Office",
+                                  "description": "Should not change the appointment.",
+                                  "contactId": %d
+                                }
+                                """.formatted(foreignContactId)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Contact not found: " + foreignContactId));
+
+        mockMvc.perform(get("/appointments/{id}", appointmentId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(ownerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Owned appointment"))
+                .andExpect(jsonPath("$.contactId").value(ownedContactId));
+    }
+
     private Long createAppointment(String token, String payload) throws Exception {
         MvcResult result = mockMvc.perform(post("/appointments")
                         .header(HttpHeaders.AUTHORIZATION, bearer(token))
